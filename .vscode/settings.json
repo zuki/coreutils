@@ -1,0 +1,53 @@
+{
+    "C_Cpp.default.includePath": [
+        "${workspaceFolder}/**",
+        "include/**",
+        "arch/riscv64/**"
+    ],
+    "C_Cpp.errorSquiggles": "disabled",
+    "cmake.configureOnOpen": true,
+    "files.associations": {
+        "*.h": "c",
+        "*.ld": "editorconfig",
+        "*.c": "c",
+        "array": "c",
+        "vector": "c",
+        "string": "c",
+        "string_view": "c",
+        "bitset": "c",
+        "optional": "c",
+        "memory": "c",
+        "chrono": "c",
+        "limits": "c",
+        "ratio": "c",
+        "__locale": "c",
+        "system_error": "c",
+        "typeinfo": "c",
+        "__string": "c",
+        "atomic": "c",
+        "cstring": "c",
+        "cstddef": "c",
+        "__config": "c",
+        "ios": "c",
+        "__hash_table": "c",
+        "__split_buffer": "c",
+        "deque": "c",
+        "initializer_list": "c",
+        "queue": "c",
+        "stack": "c",
+        "unordered_map": "c",
+        "*.in": "c"
+    },
+    "editor.tokenColorCustomizations": {
+        "comments":{
+            "foreground":"#d17f13"
+        }
+    },
+	"C_Cpp.files.exclude": {
+        "/": true,
+        "**/.vscode": true,
+        "**/.vs": true,
+        "**/.git": true
+    },
+    "C_Cpp.exclusionPolicy": "checkFilesAndFolders"
+}
