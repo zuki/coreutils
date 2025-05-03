@@ -57,6 +57,8 @@
 #include <signal.h>
 #include <uchar.h>
 
+#include <unistd.h>
+
 #if HAVE_LANGINFO_CODESET
 # include <langinfo.h>
 #endif
@@ -3019,7 +3021,8 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
   struct dirent *next;
   uintmax_t total_blocks = 0;
   static bool first = true;
-
+    //syscall(999, "ls name", name, (unsigned long)command_line_arg);
+    //syscall(999, "ls real", realname, 0);
   errno = 0;
   dirp = opendir (name);
   if (!dirp)
@@ -3027,12 +3030,13 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
       file_failure (command_line_arg, _("cannot open directory %s"), name);
       return;
     }
+    //syscall(999, "ls", "dirp0", dirfd(dirp));
 
   if (LOOP_DETECT)
     {
       struct stat dir_stat;
       int fd = dirfd (dirp);
-
+      //syscall(999, "ls", "fd", fd);
       /* If dirfd failed, endure the overhead of stat'ing by path  */
       if ((0 <= fd
            ? fstat_for_ino (fd, &dir_stat)
@@ -3091,7 +3095,16 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
       /* Set errno to zero so we can distinguish between a readdir failure
          and when readdir simply finds that there are no more entries.  */
       errno = 0;
+      //syscall(999, "ls", "dirp->fd_a", dirfd(dirp));
       next = readdir (dirp);
+      //syscall(999, "ls", "dirp->fd_b", dirfd(dirp));
+#if 0
+      if (next) {
+        syscall(999, "ls", "ino", next->d_ino);
+      } else {
+        syscall(999, "ls", "no next", 0);
+      }
+#endif
       if (next)
         {
           if (! file_ignored (next->d_name))
@@ -3125,6 +3138,7 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
       else
         {
           int err = errno;
+          //syscall(999, "ls", "err", err);
           if (err == 0)
             break;
           /* Some readdir()s do not absorb ENOENT (dir deleted but open).
@@ -3144,6 +3158,7 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
       process_signals ();
     }
 
+    //syscall(999, "ls", "close fd", dirfd(dirp));
   if (closedir (dirp) != 0)
     {
       file_failure (command_line_arg, _("closing directory %s"), name);
@@ -3671,8 +3686,8 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
     }
 
   f->name = xstrdup (name);
+  //syscall(999, "ls", f->name, (uint64_t)cwd_n_used);
   cwd_n_used++;
-
   return blocks;
 }
 
@@ -4140,9 +4155,11 @@ print_current_files (void)
       break;
 
     case long_format:
+      //syscall(999, "ls", "cwd_n_used", (uint64_t)cwd_n_used);
       for (idx_t i = 0; i < cwd_n_used; i++)
         {
           set_normal_color ();
+          //syscall(999, "ls", ((struct fileinfo *)sorted_file[i])->name, (uint64_t)i);
           print_long_format (sorted_file[i]);
           dired_outbyte (eolbyte);
         }
@@ -4300,6 +4317,7 @@ print_long_format (const struct fileinfo *f)
   struct tm when_local;
   bool btime_ok = true;
 
+  // 1. ファイル権限のセット
   /* Compute the mode string, except remove the trailing space if no
      file in this directory has an ACL or security context.  */
   if (f->stat_ok)
@@ -4341,12 +4359,14 @@ print_long_format (const struct fileinfo *f)
 
   p = buf;
 
+  // 2. inode番号のセット (option)
   if (print_inode)
     {
       char hbuf[INT_BUFSIZE_BOUND (uintmax_t)];
       p += sprintf (p, "%*s ", inode_number_width, format_inode (hbuf, f));
     }
 
+  // 3. ブロックサイズのセット (option)
   if (print_block_size)
     {
       char hbuf[LONGEST_HUMAN_READABLE + 1];
@@ -4374,8 +4394,11 @@ print_long_format (const struct fileinfo *f)
 
   dired_indent ();
 
+  // 4. ファイル権限の出力と所有ユーザ、グループのセット
   if (print_owner || print_group || print_author || print_scontext)
     {
+        //syscall(999, "ls", buf, (uint64_t)buf);
+        //syscall(999, "ls", "outbuf_1", (uint64_t)buf);
       dired_outbuf (buf, p - buf);
 
       if (print_owner)
@@ -4393,6 +4416,7 @@ print_long_format (const struct fileinfo *f)
       p = buf;
     }
 
+  // 5. ファイルサイズ（通常ファイル）、major/minor番号（デバイスファイル）のセット
   if (f->stat_ok
       && (S_ISCHR (f->stat.st_mode) || S_ISBLK (f->stat.st_mode)))
     {
@@ -4428,6 +4452,7 @@ print_long_format (const struct fileinfo *f)
   s = 0;
   *p = '\1';
 
+  // 6. ファイル作成日付のセット
   if (f->stat_ok && btime_ok
       && localtime_rz (localtz, &when_timespec.tv_sec, &when_local))
     {
@@ -4473,9 +4498,14 @@ print_long_format (const struct fileinfo *f)
       /* FIXME: (maybe) We discarded when_timespec.tv_nsec. */
     }
 
+  // 7. ユーザから作成日時までを出力
+    //syscall(999, "ls", buf, (uint64_t)buf);
+    //syscall(999, "ls", "outbuf_2", (uint64_t)buf);
   dired_outbuf (buf, p - buf);
+  // 8. ファイル名を出力
   size_t w = print_name_with_quoting (f, false, &dired_obstack, p - buf);
 
+  // 9. シンボルリンクのリンク先とtypeインディケータの出力
   if (f->filetype == symbolic_link)
     {
       if (f->linkname)
@@ -4782,6 +4812,7 @@ quote_name (char const *name, struct quoting_options const *options,
   if (stack)
     push_current_dired_pos (stack);
 
+  //syscall(999, "ls", "fwrite-name", (uint64_t)buf + skip_quotes);
   fwrite (buf + skip_quotes, 1, len - (skip_quotes * 2), stdout);
 
   dired_pos += len;
@@ -4834,7 +4865,7 @@ print_name_with_quoting (const struct fileinfo *f,
           && (start_col / line_length != (start_col + len - 1) / line_length))
         put_indicator (&color_indicator[C_CLR_TO_EOL]);
     }
-
+  //syscall(999, "print_name_with_quoting", "ok", 0);
   return len;
 }
 
@@ -4921,6 +4952,7 @@ static bool
 print_type_indicator (bool stat_ok, mode_t mode, enum filetype type)
 {
   char c = get_type_indicator (stat_ok, mode, type);
+  //syscall(999, "type_ind", "c", (unsigned int)c);
   if (c)
     dired_outbyte (c);
   return !!c;
