@@ -75,7 +75,8 @@
    In the future we could use the above method if available
    and default to io_blksize() if not.
  */
-enum { IO_BUFSIZE = 256 * 1024 };
+//enum { IO_BUFSIZE = 256 * 1024 };
+enum { IO_BUFSIZE = 32 * 1024 };
 static inline idx_t
 io_blksize (struct stat const *st)
 {
