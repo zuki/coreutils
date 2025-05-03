@@ -2,7 +2,8 @@
     "C_Cpp.default.includePath": [
         "${workspaceFolder}/**",
         "include/**",
-        "arch/riscv64/**"
+        "lib/**",
+        "src/**"
     ],
     "C_Cpp.errorSquiggles": "disabled",
     "cmake.configureOnOpen": true,
