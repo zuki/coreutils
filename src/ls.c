@@ -140,15 +140,15 @@
 #define obstack_chunk_alloc malloc
 #define obstack_chunk_free free
 
-/* Unix-based readdir implementations have historically returned a dirent.d_ino
-   value that is sometimes not equal to the stat-obtained st_ino value for
-   that same entry.  This error occurs for a readdir entry that refers
-   to a mount point.  readdir's error is to return the inode number of
-   the underlying directory -- one that typically cannot be stat'ed, as
-   long as a file system is mounted on that directory.  RELIABLE_D_INO
-   encapsulates whether we can use the more efficient approach of relying
-   on readdir-supplied d_ino values, or whether we must incur the cost of
-   calling stat or lstat to obtain each guaranteed-valid inode number.  */
+/* Unixベースのreaddirの実装は、歴史的にdirent.d_ino値を返してきたが、
+   同じエントリをstatで取得したst_ino値と一致しないことがあった。
+   このエラーはreaddirエントリがマウントポイントを参照する場合に発生する。
+   readdirのエラーはその元となるディレクトリのinode番号を返すことであり、
+   これはそのディレクトリにファイルシステムがマウントされている限り、通常は
+   statできないエントリである。 RELIABLE_D_INOはreaddirが提供するd_ino値に
+   依存するより効率的なアプローチを使用することができるかどうか、または、
+   保証された有効なinode番号を取得するためにstatまたはlstatを呼び出すコストを
+   負担しなければならないかどうかをカプセル化する  */
 
 #ifndef READDIR_LIES_ABOUT_MOUNTPOINT_D_INO
 # define READDIR_LIES_ABOUT_MOUNTPOINT_D_INO 1
@@ -211,10 +211,10 @@ enum acl_type
 
 struct fileinfo
   {
-    /* The file name.  */
+    /* ファイル名  */
     char *name;
 
-    /* For symbolic link, name of the file linked to, otherwise zero.  */
+    /* シンボリックリンクの場合はリンク先のファイル名、それ以外は0  */
     char *linkname;
 
     /* For terminal hyperlinks. */
@@ -224,21 +224,20 @@ struct fileinfo
 
     enum filetype filetype;
 
-    /* For symbolic link and long listing, st_mode of file linked to, otherwise
-       zero.  */
+    /* シンボリックリンクでlong表示形式の場合はリンク先のst_mode、それ以外は0  */
     mode_t linkmode;
 
-    /* security context.  */
+    /* セキュリティコンテキスㇳ */
     char *scontext;
 
     bool stat_ok;
 
-    /* For symbolic link and color printing, true if linked-to file
-       exists, otherwise false.  */
+    /* シンボリックリンクでカラー表示の場合はリンク先ファイルが存在する場合はtruee、
+       それ以外はfalse  */
     bool linkok;
 
-    /* For long listings, true if the file has an access control list,
-       or a security context.  */
+    /* long表示形式の場合、ファルがサクセスコントロールリスト、または、
+       セキュリティコンテキストを持っている場合、true  */
     enum acl_type acl_type;
 
     /* For color listings, true if a regular file has capability info.  */
@@ -251,9 +250,9 @@ struct fileinfo
     size_t width;
   };
 
-/* Null is a valid character in a color indicator (think about Epson
-   printers, for example) so we have to use a length/buffer string
-   type.  */
+/* NULLはカラーインジケータでは有効な文字である（たとえば、エプソンの
+   プリンタについて考えてみよう）ので、長さ/バッファの文字列型を使用
+   しなければならない  */
 
 struct bin_str
   {
@@ -326,41 +325,41 @@ static size_t quote_name_width (char const *name,
    Most hierarchies are likely to be shallower than this.  */
 enum { INITIAL_TABLE_SIZE = 30 };
 
-/* The set of 'active' directories, from the current command-line argument
-   to the level in the hierarchy at which files are being listed.
-   A directory is represented by its device and inode numbers (struct dev_ino).
-   A directory is added to this set when ls begins listing it or its
-   entries, and it is removed from the set just after ls has finished
-   processing it.  This set is used solely to detect loops, e.g., with
-   mkdir loop; cd loop; ln -s ../loop sub; ls -RL  */
+/* 現在のコマンドライン引数から、ファイルがリストアップされている
+   階層のレベルまでの「アクティブな」ディレクトリのセット。
+   ディレクトリは、デバイス番号とinode番号 (struct dev_ino) で表される。
+   ディレクトリは、lsがリストアップを開始するときにこのセットに追加され、
+   lsが処理を終了した直後にセットから削除される。 このセットは、たとえば、
+   mkdir loop; cd loop; ln -s ../loop sub; ls -RL のように、ループを検出
+   するためだけに使われる。  */
 static Hash_table *active_dir_set;
 
 #define LOOP_DETECT (!!active_dir_set)
 
-/* The table of files in the current directory:
+/* カレントディレクトリにあるファイル表:
 
-   'cwd_file' points to a vector of 'struct fileinfo', one per file.
-   'cwd_n_alloc' is the number of elements space has been allocated for.
-   'cwd_n_used' is the number actually in use.  */
+   'cwd_file' はファイルに一つ存在視する 'struct fileinfo'のベクタを指し示す.
+   'cwd_n_alloc' はスペースが割り当てられた要素の数。
+   'cwd_n_used' は実際に使用中の数.  */
 
-/* Address of block containing the files that are described.  */
+/* 表示するファイルを含むブロックのアドレス.  */
 static struct fileinfo *cwd_file;
 
-/* Length of block that 'cwd_file' points to, measured in files.  */
+/* 'cwd_file' が指すブロックの長さ（ファイル単位） */
 static idx_t cwd_n_alloc;
 
-/* Index of first unused slot in 'cwd_file'.  */
+/* 'cwd_file'内の最初の未使用スロットのインデックス.  */
 static idx_t cwd_n_used;
 
-/* Whether files needs may need padding due to quoting.  */
+/* 引用によるパディングが必要か否か.  */
 static bool cwd_some_quoted;
 
 /* Whether quoting style _may_ add outer quotes,
    and whether aligning those is useful.  */
 static bool align_variable_outer_quotes;
 
-/* Vector of pointers to files, in proper sorted order, and the number
-   of entries allocated for it.  */
+/* ファイルへのポインタを適切なソート順で並べたベクタと
+   そのために割り当てられたエントリ数  */
 static void **sorted_file;
 static size_t sorted_file_alloc;
 
@@ -382,14 +381,14 @@ file_or_link_mode (struct fileinfo const *file)
 }
 
 
-/* Record of one pending directory waiting to be listed.  */
+/* 表示待ちの保留中のディレクトリの記録 */
 
 struct pending
   {
     char *name;
-    /* If the directory is actually the file pointed to by a symbolic link we
-       were told to list, 'realname' will contain the name of the symbolic
-       link, otherwise zero.  */
+    /* 表示対象であるディレクトリがシンボリックリンクファイルの場合、
+       'realname'にはシンボリックリンクの名前が格納され、そうでなければ0が
+       格納される */
     char *realname;
     bool command_line_arg;
     struct pending *next;
@@ -425,16 +424,15 @@ static int major_device_number_width;
 static int minor_device_number_width;
 static int file_size_width;
 
-/* Option flags */
+/* オプションフラグ */
 
-/* long_format for lots of info, one per line.
-   one_per_line for just names, one per line.
-   many_per_line for just names, many per line, sorted vertically.
-   horizontal for just names, many per line, sorted horizontally.
-   with_commas for just names, many per line, separated by commas.
+/* long_format: たくさんの情報で、1行1エントリ.
+   one_per_line: 名前だけで、1行1エントリ.
+   many_per_line: 名前だけで、1行複数エントリ、縦にソート.
+   horizontal: 名前だけで、1行複数エントリ、横にソート.
+   with_commas: 名前だけで、1行複数エントリ、コンマ区切り.
 
-   -l (and other options that imply -l), -1, -C, -x and -m control
-   this parameter.  */
+   -l (その他 -l を意味するオプション), -1, -C, -x, -m がこのパラメタを決定する.  */
 
 enum format
   {
@@ -485,7 +483,7 @@ enum time_type
 static enum time_type time_type;
 static bool explicit_time;
 
-/* The file characteristic to sort by.  Controlled by -t, -S, -U, -X, -v.
+/* ソート対象のファイル要素.  Controlled by -t, -S, -U, -X, -v.
    The values of each item of this enum are important since they are
    used as indices in the sort functions array (see sort_files()).  */
 
@@ -523,8 +521,7 @@ static bool print_author;
 
 static bool print_group = true;
 
-/* True means print the user and group id's as numbers rather
-   than as names.  -n  */
+/* Trueの場合、名前ではなく user idとgroup idを表示する.  -n  */
 
 static bool numeric_ids;
 
@@ -1718,6 +1715,7 @@ main (int argc, char **argv)
   current_time.tv_sec = TYPE_MINIMUM (time_t);
   current_time.tv_nsec = -1;
 
+  // iはオプションでない最初のargvのindex
   i = decode_switches (argc, argv);
 
   if (print_with_color)
@@ -1795,11 +1793,14 @@ main (int argc, char **argv)
     }
 
   cwd_n_alloc = 100;
+  //syscall(999, "ls: main", "xmalloc", (unsigned long)(cwd_n_alloc * sizeof *cwd_file));
+  //syscall(999, "ls: main", "cwd_file", (unsigned long)cwd_file);
   cwd_file = xmalloc (cwd_n_alloc * sizeof *cwd_file);
   cwd_n_used = 0;
 
   clear_files ();
 
+  // n_files: コマンドラインで指定したpathの数
   n_files = argc - i;
 
   if (n_files <= 0)
@@ -1807,32 +1808,35 @@ main (int argc, char **argv)
       if (immediate_dirs)
         gobble_file (".", directory, NOT_AN_INODE_NUMBER, true, nullptr);
       else
-        queue_directory (".", nullptr, true);
+        queue_directory (".", nullptr, true);   // ls -l の場合はこれが選択: pending_dirsに追加
     }
-  else
+  else  // ls -l pathの場合はこれが選択: cmd_files[]に追加
     do
       gobble_file (argv[i++], unknown, NOT_AN_INODE_NUMBER, true, nullptr);
     while (i < argc);
 
+    //syscall(999, "ls: main", "cwd_n_used 1", (unsigned long)cwd_n_used);
   if (cwd_n_used)
     {
       sort_files ();
       if (!immediate_dirs)
         extract_dirs_from_files (nullptr, true);
-      /* 'cwd_n_used' might be zero now.  */
+      /* ls -l pathの場合、ここで'cwd_n_used'はゼロになる */
     }
 
-  /* In the following if/else blocks, it is sufficient to test 'pending_dirs'
-     (and not pending_dirs->name) because there may be no markers in the queue
-     at this point.  A marker may be enqueued when extract_dirs_from_files is
-     called with a non-empty string or via print_dir.  */
+  //syscall(999, "ls: main", "cwd_n_used 2", (unsigned long)cwd_n_used);
+
+  /* 以下のif/elseブロックでは'pending_dirs->name'ではなく'pending_dirs'を
+     テストすれば十分である。 マーカーがキューに入るのはextract_dirs_from_files が
+     空でない文字列で呼び出されたときか、 print_dir を経由したときである。 */
+  // ls -l pathの場合、cwd_n_used = 0
   if (cwd_n_used)
     {
       print_current_files ();
       if (pending_dirs)
         dired_outbyte ('\n');
     }
-  else if (n_files <= 1 && pending_dirs && pending_dirs->next == 0)
+  else if (n_files <= 1 && pending_dirs && pending_dirs->next == 0) // 該当する
     print_dir_name = false;
 
   while (pending_dirs)
@@ -1844,10 +1848,10 @@ main (int argc, char **argv)
         {
           if (thispend->name == nullptr)
             {
-              /* thispend->name == nullptr means this is a marker entry
-                 indicating we've finished processing the directory.
-                 Use its dev/ino numbers to remove the corresponding
-                 entry from the active_dir_set hash table.  */
+              /* thispend->name == nullptrは、これがディレクトリの処理を
+                終了したことを示すマーカーエントリであることを意味する。
+                dev/ino番号を使用して、active_dir_setハッシュテーブルから
+                対応するエントリを削除する  */
               struct dev_ino di = dev_ino_pop ();
               struct dev_ino *found = hash_remove (active_dir_set, &di);
               if (false)
@@ -1859,6 +1863,7 @@ main (int argc, char **argv)
             }
         }
 
+      // ls -l, ls -l path ともに実行
       print_dir (thispend->name, thispend->realname,
                  thispend->command_line_arg);
 
@@ -1946,8 +1951,8 @@ stdout_isatty (void)
   return out_tty;
 }
 
-/* Set all the option flags according to the switches specified.
-   Return the index of the first non-option argument.  */
+/* 指定されたスイッチに従いすべてのオプションフラグを設定する。
+   オプションでない最初の引数のインデックスを返す  */
 
 static int
 decode_switches (int argc, char **argv)
@@ -2988,15 +2993,16 @@ file_failure (bool serious, char const *message, char const *file)
   set_exit_status (serious);
 }
 
-/* Request that the directory named NAME have its contents listed later.
-   If REALNAME is nonzero, it will be used instead of NAME when the
-   directory name is printed.  This allows symbolic links to directories
-   to be treated as regular directories but still be listed under their
-   real names.  NAME == nullptr is used to insert a marker entry for the
-   directory named in REALNAME.
-   If NAME is non-null, we use its dev/ino information to save
-   a call to stat -- when doing a recursive (-R) traversal.
-   COMMAND_LINE_ARG means this directory was mentioned on the command line.  */
+/* NAMEという名前のディレクトリの内容を後で表示するように要求する。
+   REALNAMEが0以外の場合、ディレクトリ名が表示されるときに NAMEの
+   代わりにREALNAMEが使われる。 これにより、ディレクトリへの
+   シンボリックリンクを通常のディレクトリとして扱いつつ、実名で
+   リストすることができる。 NAME == nullptrは、REALNAMEで指定された
+   ディレクトリのマーカエントリとして使用される。NAMEがnullでない場合、
+   そのdev/inoの情報を使用して、再帰的(-R)トラバーサルを行う際に
+   stat -- を呼び出す手間を省く。
+   COMMAND_LINE_ARGは、このディレクトリがコマンドラインで指定された
+   ことを意味する  */
 
 static void
 queue_directory (char const *name, char const *realname, bool command_line_arg)
@@ -3009,10 +3015,14 @@ queue_directory (char const *name, char const *realname, bool command_line_arg)
   pending_dirs = new;
 }
 
-/* Read directory NAME, and list the files in it.
-   If REALNAME is nonzero, print its name instead of NAME;
-   this is used for symbolic links to directories.
-   COMMAND_LINE_ARG means this directory was mentioned on the command line.  */
+/* ディレクトリNAMEを読み込み、その中のファイルをリストアップする。
+   REALNAMEが0以外の場合、NAMEの代わりにその名前を表示する。これは
+   ディレクトリへのシンボリックリンクに使用される。
+   COMMAND_LINE_ARGはこのディレクトリがコマンドラインで言及された
+   ことを意味する。
+   'ls -l'の場合は、直接呼び出される
+
+   */
 
 static void
 print_dir (char const *name, char const *realname, bool command_line_arg)
@@ -3021,7 +3031,8 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
   struct dirent *next;
   uintmax_t total_blocks = 0;
   static bool first = true;
-    //syscall(999, "ls name", name, (unsigned long)command_line_arg);
+
+    //syscall(999, "ls: print_dir", name, (unsigned long)command_line_arg);
     //syscall(999, "ls real", realname, 0);
   errno = 0;
   dirp = opendir (name);
@@ -3087,16 +3098,15 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
       dired_outstring (":\n");
     }
 
-  /* Read the directory entries, and insert the subfiles into the 'cwd_file'
-     table.  */
+  /* ディレクトリエントリを読み込み、サブファイルを'cwd_file'テーブルに挿入する */
 
   while (true)
     {
       /* Set errno to zero so we can distinguish between a readdir failure
          and when readdir simply finds that there are no more entries.  */
       errno = 0;
-      //syscall(999, "ls", "dirp->fd_a", dirfd(dirp));
-      next = readdir (dirp);
+      //syscall(999, "ls", "readdir", dirfd(dirp));
+      next = readdir (dirp);    // sys_getdents()を呼びだす -> エントリごとに getdents()
       //syscall(999, "ls", "dirp->fd_b", dirfd(dirp));
 #if 0
       if (next) {
@@ -3115,6 +3125,7 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
 #else
               type = unknown;
 #endif
+              // cwd_file[]にエントリを挿入: その間 /etc/passed, /etc/groupをopen
               total_blocks += gobble_file (next->d_name, type,
                                            RELIABLE_D_INO (next),
                                            false, name);
@@ -3152,9 +3163,9 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
             break;
         }
 
-      /* When processing a very large directory, and since we've inhibited
-         interrupts, this loop would take so long that ls would be annoyingly
-         uninterruptible.  This ensures that it handles signals promptly.  */
+      /* 非常に大きなディレクトリを処理する場合、割り込みを禁止しているため、
+         このループは非常に時間がかかり、lsは迷惑なほど割り込みができなくなる。
+         次の関数でシグナルを迅速に処理する */
       process_signals ();
     }
 
@@ -3168,8 +3179,8 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
   /* Sort the directory contents.  */
   sort_files ();
 
-  /* If any member files are subdirectories, perhaps they should have their
-     contents listed rather than being mentioned here as files.  */
+  /* メンバファイルがサブ・ディレクトリーならばここでファイルとして
+     表示するのでなくその内容をリストアップすべきだろう  */
 
   if (recursive)
     extract_dirs_from_files (name, false);
@@ -3187,6 +3198,7 @@ print_dir (char const *name, char const *realname, bool command_line_arg)
       dired_outbuf (p, pend - p);
     }
 
+  //syscall(999, "ls: print_dir", "cwd_n_used", cwd_n_used);
   if (cwd_n_used)
     print_current_files ();
 }
@@ -3378,9 +3390,9 @@ needs_quoting (char const *name)
   return *name != *test || strlen (name) != len;
 }
 
-/* Add a file to the current table of files.
-   Verify that the file exists, and print an error message if it does not.
-   Return the number of blocks that the file occupies.  */
+/* 現在のファイル表にファイルを追加する。
+   ファイルが存在することを確認し、存在しない場合はエラー・メッセージを表示する。
+   ファイルが占めるブロック数を返す */
 static uintmax_t
 gobble_file (char const *name, enum filetype type, ino_t inode,
              bool command_line_arg, char const *dirname)
@@ -3388,8 +3400,8 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
   uintmax_t blocks = 0;
   struct fileinfo *f;
 
-  /* An inode value prior to gobble_file necessarily came from readdir,
-     which is not used for command line arguments.  */
+  /* gobble_fileより前のinode値は必然的にreaddirから来たものであり、
+     コマンドライン引数には使われない。  affirm = assert  */
   affirm (! command_line_arg || inode == NOT_AN_INODE_NUMBER);
 
   if (cwd_n_used == cwd_n_alloc)
@@ -3500,7 +3512,8 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
           FALLTHROUGH;
 
         default: /* DEREF_NEVER */
-          err = do_lstat (full_name, &f->stat);
+          //syscall(999, "ls: do_lstat", full_name, 0);
+          err = do_lstat (full_name, &f->stat);     // ls -l pathはこれが選択
           do_deref = false;
           break;
         }
@@ -3523,22 +3536,22 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
         }
 
       f->stat_ok = true;
-      f->filetype = type = d_type_filetype[IFTODT (f->stat.st_mode)];
+      f->filetype = type = d_type_filetype[IFTODT (f->stat.st_mode)];   // directory
     }
 
-  if (type == directory && command_line_arg && !immediate_dirs)
+  if (type == directory && command_line_arg && !immediate_dirs)     // これに該当
     f->filetype = type = arg_directory;
 
-  bool get_scontext = (format == long_format) | print_scontext;
+  bool get_scontext = (format == long_format) | print_scontext;     // これに該当
   bool check_capability = format_needs_capability & (type == normal);
 
   if (get_scontext | check_capability)
     {
       struct aclinfo ai;
-      int aclinfo_flags = ((do_deref ? ACL_SYMLINK_FOLLOW : 0)
-                           | (get_scontext ? ACL_GET_SCONTEXT : 0)
-                           | filetype_d_type[type]);
-      int n = file_has_aclinfo_cache (full_name, f, &ai, aclinfo_flags);
+      int aclinfo_flags = ((do_deref ? ACL_SYMLINK_FOLLOW : 0)      // 0
+                           | (get_scontext ? ACL_GET_SCONTEXT : 0)  // 0
+                           | filetype_d_type[type]);                // 9
+      int n = file_has_aclinfo_cache (full_name, f, &ai, aclinfo_flags); // 0
       bool have_acl = 0 < n;
       bool have_scontext = !ai.scontext_err;
 
@@ -3580,7 +3593,7 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
     }
 
   if ((type == symbolic_link)
-      & ((format == long_format) | check_symlink_mode))
+      && ((format == long_format) || check_symlink_mode))
     {
       struct stat linkstats;
 
@@ -3617,14 +3630,16 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
     {
       if (print_owner)
         {
-          int len = format_user_width (f->stat.st_uid);
+          syscall(999, "ls: gobble", "getuser", (unsigned long)f->stat.st_uid);
+          int len = format_user_width (f->stat.st_uid); // user nameの表示に必要なカラム数
           if (owner_width < len)
             owner_width = len;
         }
 
       if (print_group)
         {
-          int len = format_group_width (f->stat.st_gid);
+          syscall(999, "ls: gobble", "getgroup", (unsigned long)f->stat.st_gid);
+          int len = format_group_width (f->stat.st_gid); // group nameの表示に必要なカラム数
           if (group_width < len)
             group_width = len;
         }
@@ -3646,7 +3661,7 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
 
   if (format == long_format)
     {
-      char b[INT_BUFSIZE_BOUND (uintmax_t)];
+      char b[INT_BUFSIZE_BOUND (uintmax_t)];    // b[21]
       int b_len = strlen (umaxtostr (f->stat.st_nlink, b));
       if (nlink_width < b_len)
         nlink_width = b_len;
@@ -3686,7 +3701,7 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
     }
 
   f->name = xstrdup (name);
-  //syscall(999, "ls", f->name, (uint64_t)cwd_n_used);
+  //syscall(999, "ls: goblle", f->name, (uint64_t)cwd_n_used);
   cwd_n_used++;
   return blocks;
 }
@@ -3729,13 +3744,13 @@ basename_is_dot_or_dotdot (char const *name)
   return dot_or_dotdot (base);
 }
 
-/* Remove any entries from CWD_FILE that are for directories,
-   and queue them to be listed as directories instead.
-   DIRNAME is the prefix to prepend to each dirname
-   to make it correct relative to ls's working dir;
-   if it is null, no prefix is needed and "." and ".." should not be ignored.
-   If COMMAND_LINE_ARG is true, this directory was mentioned at the top level,
-   This is desirable when processing directories recursively.  */
+/* CWD_FILEからディレクトリのエントリを削除し、代わりにディレクトリとして
+   リストされるようにキューに入れる。
+   DIRNAMEは、lsの作業ディレクトリからの相対パスを正しくするために
+   各ディレクトリ名の前に付ける接頭辞である。NULLの場合、接頭辞は必要なく、
+   "."と".."も無視されるべきでない。
+   COMMAND_LINE_ARGがtrueの場合、このディレクトリはトップレベルで言及された。
+   これは、ディレクトリを再帰的に処理する場合に望ましい  */
 
 static void
 extract_dirs_from_files (char const *dirname, bool command_line_arg)
@@ -3763,7 +3778,10 @@ extract_dirs_from_files (char const *dirname, bool command_line_arg)
               || ! basename_is_dot_or_dotdot (f->name)))
         {
           if (!dirname || f->name[0] == '/')
-            queue_directory (f->name, f->linkname, command_line_arg);
+             {
+                //syscall(999, "ls: queue_dir", f->name, 0);
+                queue_directory (f->name, f->linkname, command_line_arg);
+             }
           else
             {
               char *name = file_name_concat (dirname, f->name, nullptr);
@@ -4126,6 +4144,7 @@ sort_files (void)
 static void
 print_current_files (void)
 {
+  //syscall(999, "ls: print_current_files", "called", 0);
   switch (format)
     {
     case one_per_line:
@@ -4301,6 +4320,7 @@ format_inode (char buf[INT_BUFSIZE_BOUND (uintmax_t)],
 static void
 print_long_format (const struct fileinfo *f)
 {
+  //syscall(999, "ls: print_long_format", f->name, (unsigned long)f->filetype);
   char modebuf[12];
   char buf
     [LONGEST_HUMAN_READABLE + 1		/* inode */
