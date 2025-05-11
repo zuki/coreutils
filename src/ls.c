@@ -3612,7 +3612,7 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
       if (block_size_width < len)
         block_size_width = len;
     }
-
+#if 0
   if (format == long_format)
     {
       if (print_owner)
@@ -3636,7 +3636,7 @@ gobble_file (char const *name, enum filetype type, ino_t inode,
             author_width = len;
         }
     }
-
+#endif
   if (print_scontext)
     {
       int len = strlen (f->scontext);
